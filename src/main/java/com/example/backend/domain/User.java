@@ -21,9 +21,15 @@ public class User {
     @Column(name = "userNo")
     private Long no; // pk
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private Aws profileImageFile;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private Aws backgroundImageFile;
+
     private String userName; // 이름
 
-    private String nickName;
+    private String nickName; // 닉네임
 
     private String email; // 이메일
 
@@ -39,7 +45,7 @@ public class User {
     private String role; // 권한 default = ROLE_USER
 
     @ColumnDefault("1")
-    private int state; // 상태 1 = 정상 , -99 = 탈퇴
+    private int state; // 상태 1 = 정상 , -99 = 탈퇴d
 
     private LocalDateTime regDate;
 

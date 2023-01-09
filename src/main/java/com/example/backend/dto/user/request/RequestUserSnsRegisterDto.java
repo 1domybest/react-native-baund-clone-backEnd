@@ -1,7 +1,6 @@
 package com.example.backend.dto.user.request;
 
 import com.example.backend.domain.User;
-import com.example.backend.dto.aws.request.RequestAwsDto;
 import lombok.Data;
 import org.springframework.lang.Nullable;
 
@@ -9,13 +8,10 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 
 @Data
-public class RequestUserRegisterDto {
+public class RequestUserSnsRegisterDto {
 
     @NotBlank(message = "이름을 입력해주세요")
     private String userName; // 이름
-
-    @NotBlank(message = "닉네임 입력해주세요")
-    private String nickName; // 이름
 
     @NotBlank(message = "이메일을 입력해주세요.")
     @Email(message = "정확한 이메일을 입력해주세요")
@@ -30,21 +26,13 @@ public class RequestUserRegisterDto {
     @Nullable
     private String phone;
 
-    @Nullable
-    private RequestAwsDto profileImageFile;
-
-    @Nullable
-    private RequestAwsDto backgroundImageFile;
-
     public User toEntity () {
         return User.builder()
                 .userName(userName)
                 .email(email)
-                .nickName(nickName)
                 .provider(provider)
                 .providerId(providerId)
                 .phone(phone)
                 .build();
     }
 }
-

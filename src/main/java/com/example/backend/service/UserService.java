@@ -3,11 +3,14 @@ package com.example.backend.service;
 import com.example.backend.common.exception.CustomApiException;
 import com.example.backend.common.jwt.JWTUserMap;
 import com.example.backend.common.jwt.JwtService;
+import com.example.backend.domain.Aws;
 import com.example.backend.domain.User;
-import com.example.backend.dto.DataMap;
 import com.example.backend.dto.ResponseMap;
 import com.example.backend.dto.user.request.RequestUserEmailDoubleCheckDto;
 import com.example.backend.dto.user.request.RequestUserRegisterDto;
+import com.example.backend.dto.user.request.RequestUserSnsRegisterDto;
+import com.example.backend.repository.aws.AwsRepository;
+import com.example.backend.repository.aws.AwsRepositorySupport;
 import com.example.backend.repository.user.UserRepository;
 import com.example.backend.repository.user.UserRepositorySupport;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +34,10 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserRepositorySupport userRepositorySupport;
 
+    private final AwsRepository awsRepository;
+
+    private final AwsRepositorySupport awsRepositorySupport;
+
 
     public void initToken (User user, HttpServletRequest request, HttpServletResponse response) {
         // 엑세스 토큰 생성 (유효시간은 최대한 짧게)
@@ -51,11 +58,26 @@ public class UserService {
      * @return
      */
     @Transactional(readOnly = false)
-    public boolean register (RequestUserRegisterDto requestUserRegisterDto, HttpServletRequest request, HttpServletResponse response) {
+    public ResponseMap register (RequestUserRegisterDto requestUserRegisterDto, HttpServletRequest request, HttpServletResponse response) {
+        ResponseMap responseMap = new ResponseMap();
+
         User user = userRepository.save(requestUserRegisterDto.toEntity());
-        initToken(user, request, response); // 토큰 생성 함수
+        if (requestUserRegisterDto.getProfileImageFile() != null) {
+            Aws profileImageFile = awsRepository.save(requestUserRegisterDto.getProfileImageFile().toEntity());
+            user.setProfileImageFile(profileImageFile);
+        }
+
+        if (requestUserRegisterDto.getBackgroundImageFile() != null) {
+            Aws backgroundImageFile = awsRepository.save(requestUserRegisterDto.getBackgroundImageFile().toEntity());
+            user.setBackgroundImageFile(backgroundImageFile);
+        }
+
+
         if (user != null) {
-            return true;
+            initToken(user, request, response); // 토큰 생성 함수
+            responseMap.setMessage("회원가입이 완료되었습니다.");
+            responseMap.setHttpStatus(HttpStatus.OK);
+            return responseMap;
         } else {
             throw new CustomApiException("회원가입에 실패하였습니다.\n고객 센터에 문의해주세요.", HttpStatus.BAD_REQUEST);
         }
@@ -78,15 +100,15 @@ public class UserService {
 
     /**
      * 소셜 로그인
-     * @param requestUserRegisterDto
+     * @param requestUserSnsRegisterDto
      * @return
      */
     @Transactional(readOnly = false) // 로그인뿐만 아니라 회원가입일수도 있기때문 false
-    public ResponseMap snsLogin (RequestUserRegisterDto requestUserRegisterDto, HttpServletRequest request, HttpServletResponse response) {
+    public ResponseMap snsLogin (RequestUserSnsRegisterDto requestUserSnsRegisterDto, HttpServletRequest request, HttpServletResponse response) {
         ResponseMap responseMap = new ResponseMap();
-        User user = userRepositorySupport.findByEmail(requestUserRegisterDto.getEmail());
+        User user = userRepositorySupport.findByEmail(requestUserSnsRegisterDto.getEmail());
         if (user == null) { // 같은 이메일로 가입한 회원이 없다면 (= sns로 첫 로그인 이라는 뜻)
-            user = userRepository.save(requestUserRegisterDto.toEntity()); // 가입 진행
+            user = userRepository.save(requestUserSnsRegisterDto.toEntity()); // 가입 진행
             responseMap.setHttpStatus(HttpStatus.OK);
             responseMap.setMessage("회원가입이 완료되었습니다");
             initToken(user, request, response); // 토큰 생성 함수
@@ -95,8 +117,8 @@ public class UserService {
             if (user.getProvider() == null) { // sns 로 가입한 이력이 x
                 throw new CustomApiException("일반 이메일회원입니다.\n연동하시겠습니까?.", HttpStatus.SEE_OTHER); // 일반회원으로 가입한 경로가 존재함
             } else {
-                user.setProvider(requestUserRegisterDto.getProvider()); // sns의 가입경로를 바꿔준다
-                user.setProviderId(requestUserRegisterDto.getProviderId()); // sns의 고유 번호를 바꿔준다.
+                user.setProvider(requestUserSnsRegisterDto.getProvider()); // sns의 가입경로를 바꿔준다
+                user.setProviderId(requestUserSnsRegisterDto.getProviderId()); // sns의 고유 번호를 바꿔준다.
                 initToken(user, request, response); // 토큰 생성 함수
                 responseMap.setHttpStatus(HttpStatus.OK);
                 responseMap.setMessage("로그인 완료");
@@ -108,14 +130,14 @@ public class UserService {
 
     /**
      * 소셜 로그인 연동
-     * @param requestUserRegisterDto
+     * @param requestUserSnsRegisterDto
      * @return
      */
     @Transactional(readOnly = false) // 로그인뿐만 아니라 회원가입일수도 있기때문 false
-    public ResponseMap updateProvider (RequestUserRegisterDto requestUserRegisterDto) {
-        User user = userRepositorySupport.findByEmail(requestUserRegisterDto.getEmail());
-        user.setProvider(requestUserRegisterDto.getProvider());
-        user.setProviderId(requestUserRegisterDto.getProviderId());
+    public ResponseMap updateProvider (RequestUserSnsRegisterDto requestUserSnsRegisterDto) {
+        User user = userRepositorySupport.findByEmail(requestUserSnsRegisterDto.getEmail());
+        user.setProvider(requestUserSnsRegisterDto.getProvider());
+        user.setProviderId(requestUserSnsRegisterDto.getProviderId());
         ResponseMap responseMap = new ResponseMap();
         responseMap.setHttpStatus(HttpStatus.OK);
         responseMap.setMessage("연동되었습니다.");
