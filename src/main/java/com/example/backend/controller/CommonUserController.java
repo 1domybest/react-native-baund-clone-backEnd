@@ -5,6 +5,7 @@ import com.example.backend.dto.DataMap;
 import com.example.backend.dto.ResponseMap;
 import com.example.backend.dto.common.request.RequestEmailAuthCodeDto;
 import com.example.backend.dto.user.request.RequestUserEmailDoubleCheckDto;
+import com.example.backend.dto.user.request.RequestUserLoginDto;
 import com.example.backend.dto.user.request.RequestUserRegisterDto;
 import com.example.backend.dto.user.request.RequestUserSnsRegisterDto;
 import com.example.backend.service.CommonService;
@@ -26,16 +27,16 @@ public class CommonUserController {
     private final CommonService commonService;
 
 
-//    /**
-//     * 일반 회원가입
-//     * @param requestUserRegisterDto
-//     * @return
-//     */
-//    @PostMapping("/register")
-//    public CMRespDto<?> register (@Valid @RequestBody DataMap dataMap, HttpServletRequest request, HttpServletResponse response) {
-//        System.out.println(dataMap);
-//        return new CMRespDto<>(200, "", null);
-//    }
+    /**
+     * 일반 로그인
+     * @param requestUserRegisterDto
+     * @return
+     */
+    @PostMapping("/login")
+    public CMRespDto<?> register (@Valid @RequestBody RequestUserLoginDto requestUserRegisterDto, HttpServletRequest request, HttpServletResponse response) {
+        ResponseMap responseMap = userService.login(requestUserRegisterDto, request, response);
+        return new CMRespDto<>(responseMap.getHttpStatus().value(), responseMap.getMessage(), null);
+    }
 
     /**
      * 일반 회원가입

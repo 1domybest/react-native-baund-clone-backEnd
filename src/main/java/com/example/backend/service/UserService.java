@@ -7,6 +7,7 @@ import com.example.backend.domain.Aws;
 import com.example.backend.domain.User;
 import com.example.backend.dto.ResponseMap;
 import com.example.backend.dto.user.request.RequestUserEmailDoubleCheckDto;
+import com.example.backend.dto.user.request.RequestUserLoginDto;
 import com.example.backend.dto.user.request.RequestUserRegisterDto;
 import com.example.backend.dto.user.request.RequestUserSnsRegisterDto;
 import com.example.backend.repository.aws.AwsRepository;
@@ -15,6 +16,7 @@ import com.example.backend.repository.user.UserRepository;
 import com.example.backend.repository.user.UserRepositorySupport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 @RequiredArgsConstructor
 public class UserService {
 
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtService jwtService;
     private static final String ACCESS_TOKEN = "accessToken";
     private static final String REFRESH_TOKEN = "refreshToken";
@@ -53,6 +56,31 @@ public class UserService {
     }
 
     /**
+     * 일반 로그인
+     * @param requestUserRegisterDto
+     * @return
+     */
+    @Transactional(readOnly = false)
+    public ResponseMap login (RequestUserLoginDto requestUserRegisterDto, HttpServletRequest request, HttpServletResponse response) {
+        ResponseMap responseMap = new ResponseMap();
+
+        User user = userRepository.findByEmail(requestUserRegisterDto.getEmail());
+
+        if (user == null) {
+            throw new CustomApiException("존재하지 않는 이메일입니다.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (!bCryptPasswordEncoder.matches(requestUserRegisterDto.getPassword(), user.getPassword())) {
+            throw new CustomApiException("비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
+        }
+
+        initToken(user, request, response); // 토큰 생성 함수
+        responseMap.setMessage("로그인 되었습니다.");
+        responseMap.setHttpStatus(HttpStatus.OK);
+        return responseMap;
+    }
+
+    /**
      * 일반 회원가입
      * @param requestUserRegisterDto
      * @return
@@ -62,6 +90,12 @@ public class UserService {
         ResponseMap responseMap = new ResponseMap();
 
         User user = userRepository.save(requestUserRegisterDto.toEntity());
+
+        String rawPassword = user.getPassword();
+        String encPassword = bCryptPasswordEncoder.encode(rawPassword); // 비밀번호 암호화
+
+        user.setPassword(encPassword);
+
         if (requestUserRegisterDto.getProfileImageFile() != null) {
             Aws profileImageFile = awsRepository.save(requestUserRegisterDto.getProfileImageFile().toEntity());
             user.setProfileImageFile(profileImageFile);

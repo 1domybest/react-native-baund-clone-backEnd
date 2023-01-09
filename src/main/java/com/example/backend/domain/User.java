@@ -33,6 +33,8 @@ public class User {
 
     private String email; // 이메일
 
+    private String password; // 비밀번호
+
     private String provider; // 로그인한 sns 브랜드명 예) google
 
     private String providerId; // 로그인한 sns의 회원 고유번호 예)asdAKSDJjwndjicIAI2314
