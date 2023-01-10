@@ -69,15 +69,20 @@ public class UserService {
 
         if (user == null) {
             throw new CustomApiException("존재하지 않는 이메일입니다.", HttpStatus.BAD_REQUEST);
+        } else {
+            if (user.getProvider() != null) {
+                throw new CustomApiException( user.getProvider() + "로 가입한 계정입니다 \n" + user.getProvider() + "로 로그인해주세요.", HttpStatus.SEE_OTHER); // 일반회원으로 가입한 경로가 존재함
+            } else {
+                if (!bCryptPasswordEncoder.matches(requestUserRegisterDto.getPassword(), user.getPassword())) {
+                    throw new CustomApiException("비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
+                } else {
+                    initToken(user, request, response); // 토큰 생성 함수
+                    responseMap.setMessage("로그인 되었습니다.");
+                    responseMap.setHttpStatus(HttpStatus.OK);
+                }
+            }
         }
 
-        if (!bCryptPasswordEncoder.matches(requestUserRegisterDto.getPassword(), user.getPassword())) {
-            throw new CustomApiException("비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
-        }
-
-        initToken(user, request, response); // 토큰 생성 함수
-        responseMap.setMessage("로그인 되었습니다.");
-        responseMap.setHttpStatus(HttpStatus.OK);
         return responseMap;
     }
 
