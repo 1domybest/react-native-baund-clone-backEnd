@@ -57,7 +57,8 @@ public class CommonUserController {
      */
     @PostMapping("/userEmailDoubleCheck")
     public CMRespDto<?> userEmailDoubleCheck (@Valid @RequestBody RequestUserEmailDoubleCheckDto requestUserRegisterDto) {
-        return new CMRespDto<>(200, "사용 가능한 이메일 입니다.", userService.userEmailDoubleCheck(requestUserRegisterDto));
+        ResponseMap responseMap = userService.userEmailDoubleCheck(requestUserRegisterDto);
+        return new CMRespDto<>(responseMap.getHttpStatus().value(), responseMap.getMessage(), responseMap.getData().getBody());
     }
 
     /**

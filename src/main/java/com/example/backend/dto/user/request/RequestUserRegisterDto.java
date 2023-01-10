@@ -7,6 +7,7 @@ import org.springframework.lang.Nullable;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Data
 public class RequestUserRegisterDto {
@@ -23,6 +24,9 @@ public class RequestUserRegisterDto {
 
     @Nullable
     private String provider; // 로그인한 sns 브랜드명 예) google
+
+    @NotNull(message = "비밀번호를 입력해주세요.")
+    private String password;
 
     @Nullable
     private String providerId; // 로그인한 sns의 회원 고유번호 예)asdAKSDJjwndjicIAI2314

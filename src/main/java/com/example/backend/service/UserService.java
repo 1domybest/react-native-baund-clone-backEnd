@@ -16,6 +16,7 @@ import com.example.backend.repository.user.UserRepository;
 import com.example.backend.repository.user.UserRepositorySupport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -91,7 +92,7 @@ public class UserService {
 
         User user = userRepository.save(requestUserRegisterDto.toEntity());
 
-        String rawPassword = user.getPassword();
+        String rawPassword = requestUserRegisterDto.getPassword();
         String encPassword = bCryptPasswordEncoder.encode(rawPassword); // 비밀번호 암호화
 
         user.setPassword(encPassword);
@@ -123,12 +124,17 @@ public class UserService {
      * @return
      */
     @Transactional(readOnly = true)
-    public Boolean userEmailDoubleCheck (RequestUserEmailDoubleCheckDto requestUserRegisterDto) {
+    public ResponseMap userEmailDoubleCheck (RequestUserEmailDoubleCheckDto requestUserRegisterDto) {
+        ResponseMap responseMap = new ResponseMap();
         User user = userRepositorySupport.findByEmail(requestUserRegisterDto.getEmail());
+
         if (user != null) {
-            throw new CustomApiException("이미 사용중인 아이디 입니다.", HttpStatus.BAD_REQUEST);
+            throw new CustomApiException("이미 사용중인 이메일 입니다.", HttpStatus.BAD_REQUEST);
         } else {
-            return true;
+            responseMap.setHttpStatus(HttpStatus.OK);
+            responseMap.setMessage("사용가능한 이메일 입니다.");
+            responseMap.setData(new ResponseEntity<>(true, null, HttpStatus.OK));
+            return responseMap;
         }
     }
 
