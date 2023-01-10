@@ -159,8 +159,9 @@ public class UserService {
             initToken(user, request, response); // 토큰 생성 함수
             return responseMap;
         } else {
+            System.out.println(user.getProvider());
             if (user.getProvider() == null) { // sns 로 가입한 이력이 x
-                throw new CustomApiException("일반 이메일회원입니다.\n연동하시겠습니까?.", HttpStatus.SEE_OTHER); // 일반회원으로 가입한 경로가 존재함
+                throw new CustomApiException("일반 이메일회원입니다.\n연동하시겠습니까?.", HttpStatus.UPGRADE_REQUIRED); // 일반회원으로 가입한 경로가 존재함
             } else {
                 user.setProvider(requestUserSnsRegisterDto.getProvider()); // sns의 가입경로를 바꿔준다
                 user.setProviderId(requestUserSnsRegisterDto.getProviderId()); // sns의 고유 번호를 바꿔준다.
