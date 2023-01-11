@@ -9,7 +9,7 @@ spring:
       matching-strategy: path_pattern_parser
   jpa:
     hibernate:
-      ddl-auto: update # <-- 매 서버 실행때마다 테이블이 삭제됬다가 다시 만들어짐 당연히 데이터 역시 날라감 하지만 테스트용으로 잠시 씀
+      ddl-auto: create # <-- 매 서버 실행때마다 테이블이 삭제됬다가 다시 만들어짐 당연히 데이터 역시 날라감 하지만 테스트용으로 잠시 씀
     properties:
       hibernate:
         format_sql: true # <-- 실행쿼리를 가독성있게 표현
